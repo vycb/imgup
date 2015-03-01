@@ -1,0 +1,14 @@
+<div style="margin-top:20px">
+	<label for="author">Author: </label>
+	<a title="Edit article" href="/article/<%=orempty(result._id)%>"><%=orempty(result.author)%></a><br/>
+
+	<span id="edit"><a
+		href="/article/<%=orempty(result._id)%>">Edit article</a></span> <span id="dele"><a href="/article/<%=orempty(result._id)%>/remove">Remove article</a></span>	<br/>
+
+	<label for="content">Content: </label>
+	<div id="content" class="content"><%=orempty(result.content)%></div>
+	<%if(orempty(result.fileId)){%>
+	<label for="image">Image: </label>
+	<img id="image" src="/image/<%=orempty(result.fileId)%>"/>
+	<%}%>
+</div>
