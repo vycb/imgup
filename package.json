@@ -1,0 +1,25 @@
+{
+  "name": "imgup",
+  "description": "",
+  "version": "0.0.1",
+  "main": "./imgup.js",
+  "author": {
+    "name": "vram",
+    "email": "you@email.example"
+  },
+  "keywords": [],
+  "licenses": {
+    "type": "none"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/YOUR_LOGIN/imgup.git"
+  },
+  "bugs": {
+    "url": "http://github.com/YOUR_LOGIN/imgup/issues"
+  },
+  "dependencies": {
+    "busboy": "^0.2.11",
+    "mongodb": "^2.0.45"
+  }
+}
