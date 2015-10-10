@@ -49,15 +49,7 @@ function index(req, res){
  * route to get image
  */
 app.get("/image/:id", function(req, res){
-	article.image(req.params.id, res, function(error, result){
-		if(error){
-			console.log(error);
-//			res.json(error, 400);
-		}else if(!result){
-//			res.send(404);
-		}
-		res.end();
-	});
+	
 });
 
 /**
