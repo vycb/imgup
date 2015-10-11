@@ -7,25 +7,46 @@ var
 	GridStore = require('mongodb').GridStore,
 	mongolabcon = 'mongodb://vycb:123@ds029541.mongolab.com:29541/blog',
 	localcon = 'mongodb://localhost:27017/blog',
-	gcollection,
 	db;
-// Initialize connection once
-MongoClient.connect(mongolabcon,{db: {native_parser: true}}, function(err, database){
-	if(err) throw err;
 
-	db = database;
+MongoClient.connect(mongolabcon,{native_parser: true},function(err, database) {
+  if(err) throw err;
 
-	db.collection("articles", function(error, coll){
-		gcollection = coll;
-	});
+  db = database;
 });
 
-exports.findAll = function(callback){
-	gcollection.find().each(callback);
+exports.findAll = function(res, vh)
+{
+		db.collection("articles", function(error, coll)
+		{
+			coll.find({}, function(er, cur)
+			{
+				cur.each(function (err, doc)
+				{
+					if(doc){
+						res.write(vh.list({result: doc || {} }));
+					}
+					else{
+						res.write(vh.footer());
+
+						res.end();
+					}
+
+				});
+			});
+
+	});
+
 };
 
-exports.findById = function(id, callback){
-	gcollection.findOne({_id: new ObjectID(id)}, callback);
+exports.findById = function(id, callback)
+{
+	db.collection("articles", function(error, coll)
+	{
+		coll.findOne({_id: new ObjectID(id)}, callback);
+
+	});
+
 };
 
 /**
@@ -81,22 +102,17 @@ exports.image = function(id, res, callback){
 		return callback('image: no id');
 	}
 
-	// Open a new file
 	new GridStore(db, new ObjectID(id), 'r').open(function(err, gs){
 		if(!gs){
-			res.send(404);
+			res.statusCode = 404;
 			res.end();
-
-			return callback("Image(): GridStore is undefined");
+			return callback("Image:GS=undefined");
 		}
 
-		res.writeHead(200, {
-			"Content-Type": gs.metadata.mimetype
-		});
+		res.writeHead(200,{"Content-Type": gs.metadata.mimetype});
 
 		var stream = gs.stream(true);
 
-		// Register events
 		stream.on("data", function(chunk){
 			res.write(chunk);
 		});
@@ -105,52 +121,30 @@ exports.image = function(id, res, callback){
 
 		stream.on("close", function(){
 			res.end();
-
 			gs.close(callback);
 		});
 
 	});
+
 };
 
 exports.saveFile = function(form, callback){
-	// listen on part event for image file
 	form.on('file', function(fieldname, file, filename, encoding, mimetype)
 	{
 		if (!filename) return file.resume();
 
 		form.apinput.fileId = form.apinput.prevFileId ? new ObjectID(form.apinput.prevFileId): new ObjectID(form.apinput.fileId);
 
-		// Open a new file or prevFileId to overwrite
 		new GridStore(db, form.apinput.fileId, filename, 'w').open(function(err, gs)
 		{
 			if(!gs){
-				res.send(404);
-
-				return callback({message: "GridStore is undefined"});
+				return callback({message:"saveFile: gs=undefined"});
 			}
 
-			var stream = gs.stream(true);
-			stream.contentType = mimetype;
-			stream.metadata = {articleId: new ObjectID(form.apinput._id)};
-
+			gs.contentType = mimetype;
+			gs.metadata = {articleId: new ObjectID(form.apinput._id)};
+			var stream = gs.stream();
 			file.pipe(stream);
-
-			/*file.on('data', function(buf)
-			{
-				gs.write(buf, function(err, res)
-				{
-					console.log('On data: ', err);
-				});
-			});
-
-			file.on('end', function(err)
-			{
-				gs.close(callback);
-
-				console.log('File [' + fieldname + '] Finished');
-
-				callback(err, gs);
-			});*/
 		});
 	});
 };
@@ -165,5 +159,8 @@ exports.saveArticle = function(input, callback){
 	}
 	delete input.prevFileId;
 
-	gcollection.save(input, {safe: true}, callback);
+	db.collection("articles", function(er, coll)
+	{
+		coll.save(input,{safe: true}, callback);
+	});
 };

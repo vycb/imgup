@@ -12,8 +12,6 @@ getUrlParam = function(templ, url){
 	return regexp.exec(url);
 };
 
-
-
 http.Server(function(req, res, next){
 
 
@@ -25,13 +23,14 @@ http.Server(function(req, res, next){
 
 		res.end();
 	}
-	else if(req.url.indexOf("/image/") >-1){
+	else if(req.url.indexOf("/image/") >-1)
+	{
 		article.image(getUrlParam("/image/:id", req.url)[1], res, function(error, result){
 				if(error){
 					console.log(error);
 		//			res.json(error, 400);
 				}else if(!result){
-		//			res.send(404);
+		//			res.statusCode = 404;
 				}
 				res.end();
 		});
@@ -40,10 +39,10 @@ http.Server(function(req, res, next){
 
 		article.findById(getUrlParam("/article/:id", req.url)[1], function(error, result){
 			if(error){
-				res.send(400);
+				res.statusCode = 400;
 				console.log(error);
 			}else if(!result){
-				res.send(404);
+				res.statusCode = 404;
 			}
 
 			res.write(vh.form({ result: result, orempty: vh.orempty}));
@@ -52,8 +51,8 @@ http.Server(function(req, res, next){
 		});
 
 	}
-	else if(req.method === "POST" && req.url === "/addarticle"){
-
+	else if(req.method === "POST" && req.url === "/addarticle")
+	{
 		var form = new Busboy({ headers: req.headers });
 		form.apinput = {};
 
@@ -61,9 +60,7 @@ http.Server(function(req, res, next){
 			if(!val) return; else form.apinput[name] = val;
 		});
 
-		article.saveFile(form, function(err, gs){
-			console.log(err);
-		});
+		article.saveFile(form, function(err, gs){ console.log(err); });
 
 		form.on('finish', function()
 		{
@@ -75,13 +72,13 @@ http.Server(function(req, res, next){
 
 			article.saveArticle(form.apinput, function(err, objects){
 				if(err){
-					res.send(400);
+					res.statusCode = 400;
 					console.log(err.message);
 				}
+
 				res.headers = null;
 				res.writeHead(301, {Location: '/article/' + form.apinput._id});
 res.end();
-//					res.redirect('/article/' + form.apinput._id);
 			});
 		});
 
@@ -100,19 +97,8 @@ res.end();
 
 			res.write(vh.head());
 
-			article.findAll(function(error, result)
-			{
-				if(result){
-					res.write(vh.list({
-						result: result || {}
-					}));
-				}
-				else{
-					res.write(vh.footer());
+			article.findAll(res, vh);
 
-					res.end();
-				}
-			});
 		})(req, res);
 
 	}
